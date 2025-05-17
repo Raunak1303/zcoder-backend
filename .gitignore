@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# Coverage
+coverage/
+
+# Build output
+dist/
+build/
+
+# Optional npm cache
+.npm/
+
+# Debug files
+*.swp
