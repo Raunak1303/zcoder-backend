@@ -29,7 +29,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: 'http://localhost:3000', // ✅ Change this in production
+    origin: 'https://zcoder-frontend.vercel.app', // ✅ Change this in production
     methods: ['GET', 'POST']
   }
 });
