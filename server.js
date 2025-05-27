@@ -23,19 +23,28 @@ const commentRoutes = require('./routes/comment');
 const executeRoutes = require('./routes/execute');
 const codeExecutionRoute = require('./routes/codeExecution');
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://zcoder-frontend.vercel.app'
+];
 
 // Initialize app and server
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: 'https://zcoder-frontend.vercel.app', // ✅ Change this in production
-    methods: ['GET', 'POST']
+    origin: allowedOrigins, // ✅ Change this in production
+    methods: ['GET', 'POST'],
+    Credentials: true
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 app.use(express.json());
 
 // API Routes
