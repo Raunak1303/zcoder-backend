@@ -5,6 +5,8 @@ const cors = require('cors');
 const http = require('http');
 const socketIO = require('socket.io');
 const axios = require('axios'); // 👈 For Judge0 API
+const Room = require('./models/Room'); // make sure this path is correct
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
@@ -27,7 +29,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: '*', // ✅ Change this in production
+    origin: 'http://localhost:3000', // ✅ Change this in production
     methods: ['GET', 'POST']
   }
 });
@@ -45,8 +47,9 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/problem', problemRoutes);
 app.use('/api/solution', solutionRoutes);
 app.use('/api/comment', commentRoutes);
-app.use('/api/code', executeRoutes);
+app.use('/api/execute', executeRoutes);
 app.use('/api/codeexecution', codeExecutionRoute);
+app.use('/uploads/profilePictures', express.static(path.join(__dirname, 'uploads/profilePictures')));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
@@ -66,9 +69,25 @@ io.on('connection', (socket) => {
   console.log('🔌 New client connected:', socket.id);
 
   // Join room
-  socket.on('joinRoom', ({ roomId }) => {
-    socket.join(roomId);
-    console.log(`📥 Socket ${socket.id} joined room ${roomId}`);
+  socket.on('joinRoom', async ({ roomId, user }) => {
+  socket.join(roomId);
+  console.log(`📥 Socket ${socket.id} joined room ${roomId}`);
+
+  try {
+    // Add the user to the room's participants in DB if not already there
+    const room = await Room.findById(roomId);
+    const alreadyIn = room.participants.some(p => p.toString() === user._id);
+    if (!alreadyIn) {
+      room.participants.push(user._id);
+      await room.save();
+    }
+
+    // Populate and emit updated participants
+    const populatedRoom = await Room.findById(roomId).populate('participants', 'username email');
+    io.to(roomId).emit('participantsUpdate', populatedRoom.participants);
+  } catch (err) {
+    console.error('Error adding participant to room:', err.message);
+  }
   });
 
   // Chat message

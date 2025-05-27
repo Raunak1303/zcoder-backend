@@ -31,22 +31,33 @@ router.post('/', auth, async (req, res) => {
 });
 
 
-// Get all problems
+// Get all problems (paginated)
 router.get('/', auth, async (req, res) => {
   try {
-    const { difficulty, tag } = req.query;
+    const { difficulty, tag, page = 1, limit = 5 } = req.query;
     const filter = {};
 
     if (difficulty) filter.difficulty = difficulty;
     if (tag) filter.tags = tag;
 
-    const problems = await Problem.find(filter).sort({ createdAt: -1 });
-    res.json(problems);
+    const problems = await Problem.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await Problem.countDocuments(filter);
+
+    res.json({
+      problems,
+      totalPages: Math.ceil(total / limit),
+      currentPage: Number(page),
+    });
   } catch (error) {
     console.error('Get problems error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // Get a specific problem by ID
 router.get('/:id', auth, async (req, res) => {

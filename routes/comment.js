@@ -2,19 +2,18 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/authMiddleware');
 const Comment = require('../models/Comment');
-const Solution = require('../models/Solution');
+const Problem = require('../models/Problem');
 
-// Add a comment to a solution
-router.post('/:solutionId', auth, async (req, res) => {
+// POST comment on a problem
+router.post('/:problemId', auth, async (req, res) => {
   try {
     const { text } = req.body;
 
-    // Check if solution exists
-    const solution = await Solution.findById(req.params.solutionId);
-    if (!solution) return res.status(404).json({ message: 'Solution not found' });
+    const problem = await Problem.findById(req.params.problemId);
+    if (!problem) return res.status(404).json({ message: 'Problem not found' });
 
     const comment = new Comment({
-      solutionId: req.params.solutionId,
+      problemId: req.params.problemId,
       user: req.user.id,
       text
     });
@@ -27,10 +26,10 @@ router.post('/:solutionId', auth, async (req, res) => {
   }
 });
 
-// Get all comments for a solution
-router.get('/:solutionId', async (req, res) => {
+// GET all comments for a problem
+router.get('/:problemId', async (req, res) => {
   try {
-    const comments = await Comment.find({ solutionId: req.params.solutionId })
+    const comments = await Comment.find({ problemId: req.params.problemId })
       .populate('user', 'username')
       .sort({ createdAt: -1 });
 
